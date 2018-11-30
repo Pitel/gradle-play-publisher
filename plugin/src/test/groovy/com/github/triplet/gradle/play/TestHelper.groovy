@@ -93,10 +93,16 @@ class TestHelper {
     }
 
     static void executeConnection(ProjectConnection connection, String task) {
+        println("We made it!")
         try {
             connection.newBuild().forTasks(task).run()
+            println("G")
         } catch (BuildException e) {
+            println("E")
             throw e.cause.cause.cause
+        } catch (Throwable t) {
+            println("T")
+            t.printStackTrace()
         }
     }
 
