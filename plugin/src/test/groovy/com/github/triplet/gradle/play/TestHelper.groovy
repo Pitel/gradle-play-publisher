@@ -4,8 +4,12 @@ import com.github.triplet.gradle.play.internal.IoKt
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.tooling.BuildException
+import org.gradle.tooling.GradleConnectionException
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.ProjectConnection
+import org.gradle.tooling.ResultHandler
+
+import java.util.concurrent.CountDownLatch
 
 class TestHelper {
 
@@ -94,8 +98,19 @@ class TestHelper {
 
     static void executeConnection(ProjectConnection connection, String task) {
         println("We made it!")
+        def latch = new CountDownLatch(1)
         try {
-            connection.newBuild().forTasks(task).run()
+            connection.newBuild().forTasks(task).run(new ResultHandler<Void>() {
+                @Override
+                void onComplete(Void result) {
+                    latch.countDown()
+                }
+
+                @Override
+                void onFailure(GradleConnectionException failure) {
+                    failure.printStackTrace()
+                }
+            })
             println("G")
         } catch (BuildException e) {
             println("E")
@@ -104,6 +119,7 @@ class TestHelper {
             println("T")
             t.printStackTrace()
         }
+        latch.await()
     }
 
     static void cleanup() {
